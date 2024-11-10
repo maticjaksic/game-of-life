@@ -108,14 +108,22 @@ def drawLightWeightSpaceship(x,y):
     writeState(x,y+3,1)
     writeState(x+2,y+4,1)
 
+def drawRPentomino(x,y):
+    writeState(x+1,y,1)
+    writeState(x+2,y,1)
+    writeState(x+1,y+1,1)
+    writeState(x,y+1,1)
+    writeState(x+1,y+2,1)
             
 #####################################################################################################################
-setupArray(200,300)#height,width
+setupArray(150,150)#height,width
 setupScreen(5)#cell pixel size
 
 # drawBlinker(20,20)
 drawGlider(20,10)
-drawLightWeightSpaceship(10,20)
+drawLightWeightSpaceship(10,20)\
+
+drawRPentomino(100,100)
 
 simulating = True
 
@@ -141,7 +149,16 @@ while running:
                 wasPressed = 1
         else:
             wasPressed = 0
+
+        if keypressed[pygame.K_RIGHT]:
+            if wasPressedRight == 0:
+                boardArray = updateBoardArray(boardArray)
+                wasPressedRight = 1
+        else:
+            wasPressedRight = 0
+        
+        
         ###########################################################################################################################
     drawArray()
     pygame.display.update()
-    clock.tick(fps)    
+    # clock.tick(fps)    
