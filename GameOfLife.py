@@ -1,5 +1,4 @@
 import pygame
-import random
 
 clock = pygame.time.Clock()
 fps = 480
@@ -8,6 +7,9 @@ running = True
 
 aliveRGB = (255,255,255)
 deadRGB = (20,20,20)
+pygame.init()
+font = pygame.font.Font(pygame.font.get_default_font(), 16)
+
 #####################################################################################################################
 
 def setupScreen(size):
@@ -31,16 +33,9 @@ def drawCell(surface,color,left,top,sideLength):
 def drawArray():
     for x in range(arrayHeight):
         for y in range(arrayWidth):
-            if cellSize > 4:
-                if boardArray[x][y] == 1:
-                    drawCell(screen,aliveRGB,x*cellSize+1,y*cellSize+1,cellSize-2)
-                else:
-                    drawCell(screen,deadRGB,x*cellSize+1,y*cellSize+1,cellSize-2)
-            else:
-                if boardArray[x][y] == 1:
-                    drawCell(screen,aliveRGB,x*cellSize,y*cellSize,cellSize)
-                else:
-                    drawCell(screen,deadRGB,x*cellSize,y*cellSize,cellSize)
+            if boardArray[x][y] == 1:
+                drawCell(screen,aliveRGB,x*cellSize,y*cellSize,cellSize)
+
 
 def updateBoardArray(array):
     oldArray = [0]*arrayWidth
@@ -82,52 +77,39 @@ def drawShape(x,y,array):
 def drawBlinker(x,y):
     drawShape(x,y,[[1,1,1]])
 
-def drawBlinker(x,y):
-    writeState(x,y,1)
-    writeState(x,y+1,1)
-    writeState(x,y+2,1)
+def drawGliderGun(x,y):
+    drawShape(x,y,[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],[0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0],[1,1,0,0,0,0,0,0,0,0,1,0,0,0,1,0,1,1,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]])
 
 def drawGlider(x,y):
-    writeState(x,y,1)
-    writeState(x+2,y,1)
-    writeState(x+1,y+1,1)
-    writeState(x+2,y+1,1)
-    writeState(x+1,y+2,1)
+    drawShape(x,y,[[1,0,1],[0,1,1],[0,1,0]])
+
 
 def drawLightWeightSpaceship(x,y):
-    writeState(x+1,y,1)
-    writeState(x+2,y,1)
-    writeState(x+3,y,1)
-    writeState(x+4,y,1)
-    writeState(x+5,y,1)
-    writeState(x,y+1,1)
-    writeState(x+5,y+1,1)
-    writeState(x+5,y+2,1)
-    writeState(x+4,y+3,1)
-    writeState(x,y+3,1)
-    writeState(x+2,y+4,1)
+    drawShape(x,y,[[0,1,1,1,1,1],[1,0,0,0,0,1],[0,0,0,0,0,1],[1,0,0,0,1,0],[0,0,1,0,0,0]])
 
 def drawRPentomino(x,y):
-    writeState(x+1,y,1)
-    writeState(x+2,y,1)
-    writeState(x+1,y+1,1)
-    writeState(x,y+1,1)
-    writeState(x+1,y+2,1)
-            
+    drawShape(x,y,[[0,1,1],[1,1,0],[0,1,0]])
 #####################################################################################################################
-setupArray(200,200)#height,width
-setupScreen(5)#cell pixel size
+setupArray(50,50)#height,width
+setupScreen(20)#cell pixel size
 
 # drawBlinker(50,50)
 # drawGlider(5,5)
 # drawLightWeightSpaceship(50,50)
 
-drawRPentomino(100,100)
+# drawRPentomino(100,100)
+
+drawGliderGun(0,0)
 
 simulating = True
-pygame.init()
-FPS = clock.get_fps()
+
+averageFps = clock.get_fps()
+generations = 0
 while running:
+    screen.fill((0,0,0))
+
+    generations += 1
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -142,7 +124,7 @@ while running:
             wasPressed = 0        
                   
         boardArray = updateBoardArray(boardArray)
-        FPS = (clock.get_fps() + FPS)/2 
+        averageFps = (clock.get_fps() + averageFps)/2 
     else:###############################################              EDITING              #######################################
         if keypressed[pygame.K_SPACE]:
             if wasPressed == 0:
@@ -159,7 +141,17 @@ while running:
             wasPressedRight = 0
  
         ###########################################################################################################################
+
+    genText = font.render(str(generations)+" gen", True,(255,255,255))
+    screen.blit(genText,(5,5))
+
+    if generations % 100 == 1:
+        dispFps = averageFps
+        
+    fpsText = font.render(str(round(dispFps,0))+" fps", True,(255,255,255))
+    screen.blit(fpsText,(5,25))
+
     drawArray()
     pygame.display.update()
     
-    clock.tick()    
+    clock.tick()  
