@@ -1,3 +1,4 @@
+
 import pygame
 
 clock = pygame.time.Clock()
@@ -20,59 +21,102 @@ def setupScreen(size):
     screen = pygame.display.set_mode((width, height))
 
 def setupArray(width, height):
+    global xyAlive
+    xyAlive = []
     global boardArray
     global arrayWidth
     global arrayHeight
     arrayWidth = width
     arrayHeight = height
     boardArray= [ [0]*width for i in range(height)] 
+    
 
 def drawCell(surface,color,left,top,sideLength):
     pygame.draw.rect(surface, color, pygame.Rect(left,top,sideLength,sideLength))
 
-def drawArray():
-    for x in range(arrayHeight):
-        for y in range(arrayWidth):
-            if boardArray[x][y] == 1:
-                drawCell(screen,aliveRGB,x*cellSize,y*cellSize,cellSize)
+def drawXY():
+    # print(xyAlive)
+    for i in xyAlive:      
+        drawCell(screen,aliveRGB,i[0]*cellSize,i[1]*cellSize,cellSize)
 
 
+
+
+# def updateBoardArray(array):
+#     oldArray = [0]*arrayWidth
+#     for x in range(arrayWidth):   
+#         firstLineArray = [0]*arrayWidth
+#         for y in range(arrayHeight):
+#             if (y >= arrayWidth-1 or x >= arrayHeight-1) == False:               
+#                 firstLineArray[y] = getState(x,y)
+
+#         if x != 0:      
+#             array[x-1] = oldArray
+#         oldArray = firstLineArray
+
+#     return array
 def updateBoardArray(array):
-    oldArray = [0]*arrayWidth
-    for x in range(arrayWidth):   
-        firstLineArray = [0]*arrayWidth
-        for y in range(arrayHeight):
-            if (y >= arrayWidth-1 or x >= arrayHeight-1) == False:               
-                firstLineArray[y] = getState(x,y)
+    newArray = []
+    for coords in array:
+        # vse zive
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+                # vsi sosedje in celica
+                coord = getState([dx + coords[0], dy + coords[1]])
+                isInside = 0
+                if coord != None:
+                    for i in newArray:
+                        if i == coord:
+                            isInside = 1
+                            break
+                    if isInside == 0:
+                        newArray.append(coord)
 
-        if x != 0:      
-            array[x-1] = oldArray
-        oldArray = firstLineArray
+    return newArray
 
-    return array
-                
-            
-def getState(x,y): 
-    state = boardArray[x][y]
-    counter = 0
-
-    counter = boardArray[x-1][y-1] + boardArray[x][y-1] + boardArray[x+1][y-1] + boardArray[x-1][y] + boardArray[x+1][y] + boardArray[x-1][y+1] + boardArray[x][y+1] + boardArray[x+1][y+1] + state
-    newState = 0
+def getState(xy):
     
-    if counter == 3:
+    counter = 0
+    state = 0
+    # found = False
+    for i in xyAlive:
+        if i == xy:
+            state = 1
+            break
+
+
+    searchCoord = []
+
+    for dx in [-1, 0, 1]:
+        for dy in [-1, 0, 1]:
+            if not(dx == 0 and dy == 0):
+                searchCoord.append([dx + xy[0],dy + xy[1]])
+
+    counter = len(list(filter(lambda x: x in xyAlive , searchCoord)))
+
+    newState = 0
+
+    if counter + state == 3:
         newState = 1
-    if counter == 4:
+    if counter + state == 4:
         newState = state
 
-    return newState
+    if newState == 1:
+        return xy
+    else: 
+        return
 
-def writeState(x,y,state):
-    boardArray[x][y] = state
+# def writeState(x,y,state):
+#     boardArray[x][y] = state
+
+def writeState(x,y):
+    xyAlive.append([x,y])
 ######################################################################################################################
 def drawShape(x,y,array):
     for i in range(len(array)):
         for j in range(len(array[i])):
-            writeState(i+x,j+y,array[i][j])
+            if array[i][j] == 1:
+                writeState(i+x,j+y)
 
 def drawBlinker(x,y):
     drawShape(x,y,[[1,1,1]])
@@ -106,6 +150,7 @@ simulating = True
 
 averageFps = clock.get_fps()
 generations = 0
+
 while running:
     screen.fill((0,0,0))
 
@@ -124,7 +169,7 @@ while running:
         else:
             wasPressed = 0        
                   
-        boardArray = updateBoardArray(boardArray)
+        xyAlive = updateBoardArray(xyAlive)
         averageFps = (clock.get_fps() + averageFps)/2 
     else:###############################################              EDITING              #######################################
         if keypressed[pygame.K_SPACE]:
@@ -146,13 +191,14 @@ while running:
     genText = font.render(str(generations)+" gen", True,(255,255,255))
     screen.blit(genText,(5,5))
 
-    if generations % 100 == 1:
+    if generations % 30 == 1:
         dispFps = averageFps
         
-    fpsText = font.render(str(round(dispFps,0))+" fps", True,(255,255,255))
+    fpsText = font.render(str(round(dispFps,1))+" fps", True,(255,255,255))
     screen.blit(fpsText,(5,25))
 
-    drawArray()
+
+    drawXY()
     pygame.display.update()
     
-    clock.tick()  
+    clock.tick()    
