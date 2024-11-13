@@ -134,17 +134,17 @@ def drawLightWeightSpaceship(x,y):
 def drawRPentomino(x,y):
     drawShape(x,y,[[0,1,1],[1,1,0],[0,1,0]])
 #####################################################################################################################
-setupArray(500,500)   #height,width
-setupScreen(2)     #cell pixel size
+setupArray(1000,1000)   #height,width
+setupScreen(1)     #cell pixel size
 
-# drawBlinker(20,20)
+drawBlinker(20,20)
 
-# drawGlider(5,5)
+drawGlider(50,50)
 # drawLightWeightSpaceship(50,50)
 
 # drawRPentomino(250,250)
 
-drawGliderGun(50,50)
+# drawGliderGun(50,50)
 
 simulating = True
 
@@ -154,7 +154,7 @@ generations = 0
 while running:
     screen.fill((0,0,0))
 
-    generations += 1
+    
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -170,6 +170,7 @@ while running:
             wasPressed = 0        
                   
         xyAlive = updateBoardArray(xyAlive)
+        generations += 1
         averageFps = (clock.get_fps() + averageFps)/2 
     else:###############################################              EDITING              #######################################
         if keypressed[pygame.K_SPACE]:
@@ -179,10 +180,11 @@ while running:
         else:
             wasPressed = 0
 
-        if keypressed[pygame.K_RIGHT]:
+        if keypressed[pygame.K_m]:
             if wasPressedRight == 0:
-                boardArray = updateBoardArray(boardArray)
+                xyAlive = updateBoardArray(xyAlive)
                 wasPressedRight = 1
+                generations += 1
         else:
             wasPressedRight = 0
  
