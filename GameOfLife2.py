@@ -1,46 +1,43 @@
-
+import sys
 import pygame
 
 clock = pygame.time.Clock()
-fps = 480
 
 running = True
+xyAlive = []
 
 aliveRGB = (255,255,255)
 deadRGB = (20,20,20)
+
 pygame.init()
 font = pygame.font.Font(pygame.font.get_default_font(), 16)
 
 #####################################################################################################################
 
-def setupScreen(size):
+def setupScreen(x,y):
     global screen
+    global screenX
+    global screenY
+    screenX = x
+    screenY = y
+    screen = pygame.display.set_mode((x, y))
+    global playerX
+    global playerY
+    playerX = 0
+    playerY = 0
     global cellSize
-    cellSize = size
-    (width, height) = (cellSize*arrayHeight, cellSize*arrayWidth)
-    screen = pygame.display.set_mode((width, height))
-
-def setupArray(width, height):
-    global xyAlive
-    xyAlive = []
-    global boardArray
-    global arrayWidth
-    global arrayHeight
-    arrayWidth = width
-    arrayHeight = height
-    boardArray= [ [0]*width for i in range(height)] 
-    
+    cellSize = 5
 
 def drawCell(surface,color,left,top,sideLength):
     pygame.draw.rect(surface, color, pygame.Rect(left,top,sideLength,sideLength))
 
 def drawXY():
-    # print(xyAlive)
-    for i in xyAlive:      
-        drawCell(screen,aliveRGB,i[0]*cellSize,i[1]*cellSize,cellSize)
-
-
-
+    for i in xyAlive:
+        drawAtX = ((i[0]*cellSize)+playerX)*zoom+(screenX // 2)
+        drawAtY = ((i[1]*cellSize)+playerY)*zoom+(screenY // 2)
+        if not(drawAtX < cellSize*(-1) or drawAtY < cellSize*(-1) or drawAtX > screenX or drawAtY > screenY):
+            drawCell(screen,aliveRGB,drawAtX,drawAtY,(cellSize*zoom)+1)
+        
 
 # def updateBoardArray(array):
 #     oldArray = [0]*arrayWidth
@@ -106,9 +103,6 @@ def getState(xy):
     else: 
         return
 
-# def writeState(x,y,state):
-#     boardArray[x][y] = state
-
 def writeState(x,y):
     xyAlive.append([x,y])
 ######################################################################################################################
@@ -134,32 +128,62 @@ def drawLightWeightSpaceship(x,y):
 def drawRPentomino(x,y):
     drawShape(x,y,[[0,1,1],[1,1,0],[0,1,0]])
 #####################################################################################################################
-setupArray(1000,1000)   #height,width
-setupScreen(1)     #cell pixel size
+setupScreen(500,500)
+fps = 10
+moveSpeed = 100
+zoom = 1
 
-drawBlinker(20,20)
+# drawBlinker(0,0)
 
-drawGlider(50,50)
+# drawGlider(50,50)
 # drawLightWeightSpaceship(50,50)
 
 # drawRPentomino(250,250)
 
-# drawGliderGun(50,50)
+drawGliderGun(-20,-20)
 
 simulating = True
 
 averageFps = clock.get_fps()
 generations = 0
-
+gameFps = fps
+dt = clock.tick() / 1000
 while running:
     screen.fill((0,0,0))
 
     
 
-    for event in pygame.event.get():
+    for event in pygame.event.get():######################################            INPUTS            #######################################
         if event.type == pygame.QUIT:
             pygame.quit()
+            sys.exit()
     keypressed = pygame.key.get_pressed()
+
+    if keypressed[pygame.K_UP]:
+        playerY += moveSpeed*dt
+    elif keypressed[pygame.K_DOWN]:
+        playerY -= moveSpeed*dt
+    if keypressed[pygame.K_LEFT]:
+        playerX += moveSpeed*dt
+    elif keypressed[pygame.K_RIGHT]:
+        playerX -= moveSpeed*dt
+    if keypressed[pygame.K_c]:
+        playerX = 0
+        playerY = 0
+        zoom = 1
+    if keypressed[pygame.K_f]:
+        gameFps = fps
+    if keypressed[pygame.K_s]:
+        gameFps = 0
+    if zoom < 5:
+        if keypressed[pygame.K_z]:
+            zoom += 0.8*zoom*dt
+            moveSpeed -= 0.5*moveSpeed*dt
+    if zoom > 0.2:
+        if keypressed[pygame.K_x]:
+            zoom -= 0.8*zoom*dt
+            moveSpeed += 0.5*moveSpeed*dt
+
 
     if simulating:######################################            SIMULATING             #######################################
         if keypressed[pygame.K_SPACE]:
@@ -171,11 +195,17 @@ while running:
                   
         xyAlive = updateBoardArray(xyAlive)
         generations += 1
-        averageFps = (clock.get_fps() + averageFps)/2 
+        averageFps = (clock.get_fps() + averageFps)/2
+
+        if generations % 10 == 1:
+            dispFps = averageFps
+
+        dt = clock.tick(gameFps) / 1000
     else:###############################################              EDITING              #######################################
         if keypressed[pygame.K_SPACE]:
             if wasPressed == 0:
                 simulating = True
+                averageFps = clock.get_fps()
                 wasPressed = 1
         else:
             wasPressed = 0
@@ -187,14 +217,14 @@ while running:
                 generations += 1
         else:
             wasPressedRight = 0
- 
+
+        averageFps = (clock.get_fps() + averageFps)/2
+        dispFps = averageFps
+        dt = clock.tick() / 1000
         ###########################################################################################################################
 
     genText = font.render(str(generations)+" gen", True,(255,255,255))
     screen.blit(genText,(5,5))
-
-    if generations % 30 == 1:
-        dispFps = averageFps
         
     fpsText = font.render(str(round(dispFps,1))+" fps", True,(255,255,255))
     screen.blit(fpsText,(5,25))
@@ -203,4 +233,4 @@ while running:
     drawXY()
     pygame.display.update()
     
-    clock.tick()    
+        
