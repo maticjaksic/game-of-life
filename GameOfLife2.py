@@ -105,6 +105,15 @@ def getState(xy):
 
 def writeState(x,y):
     xyAlive.append([x,y])
+
+def swichCell(pos):
+    x = int(((pos[0]-screenX // 2)/ zoom - playerX)/cellSize)
+    y = int(((pos[1]-screenY // 2)/ zoom - playerY)/cellSize)
+
+    if [x, y] in xyAlive:
+        del xyAlive[xyAlive.index([x,y])]
+    else:
+        xyAlive.append([x, y])
 ######################################################################################################################
 def drawShape(x,y,array):
     for i in range(len(array)):
@@ -135,12 +144,12 @@ zoom = 1
 
 # drawBlinker(0,0)
 
-# drawGlider(50,50)
+# drawGlider(10,10)
 # drawLightWeightSpaceship(50,50)
 
 # drawRPentomino(250,250)
 
-drawGliderGun(-20,-20)
+#drawGliderGun(-20,-20)
 
 simulating = True
 
@@ -178,11 +187,11 @@ while running:
     if zoom < 5:
         if keypressed[pygame.K_z]:
             zoom += 0.8*zoom*dt
-            moveSpeed -= 0.5*moveSpeed*dt
+            moveSpeed -= 0.9*moveSpeed*dt
     if zoom > 0.2:
         if keypressed[pygame.K_x]:
             zoom -= 0.8*zoom*dt
-            moveSpeed += 0.5*moveSpeed*dt
+            moveSpeed += 0.9*moveSpeed*dt
 
 
     if simulating:######################################            SIMULATING             #######################################
@@ -217,6 +226,14 @@ while running:
                 generations += 1
         else:
             wasPressedRight = 0
+        
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if not clicking:
+                clicking = True
+                swichCell(event.pos)
+        else:
+            clicking = False
+
 
         averageFps = (clock.get_fps() + averageFps)/2
         dispFps = averageFps
@@ -225,10 +242,10 @@ while running:
 
     genText = font.render(str(generations)+" gen", True,(255,255,255))
     screen.blit(genText,(5,5))
-        
     fpsText = font.render(str(round(dispFps,1))+" fps", True,(255,255,255))
     screen.blit(fpsText,(5,25))
-
+    liveText = font.render(str(len(xyAlive))+" living", True,(255,255,255))
+    screen.blit(liveText,(5,45))
 
     drawXY()
     pygame.display.update()
