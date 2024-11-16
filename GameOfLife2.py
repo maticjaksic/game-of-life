@@ -1,16 +1,17 @@
 import sys
 import pygame
+from PIL import Image
 
 clock = pygame.time.Clock()
 
 running = True
-xyAlive = []
-
+xyAlive = set(())
 aliveRGB = (255,255,255)
 deadRGB = (20,20,20)
 
 pygame.init()
 font = pygame.font.Font(pygame.font.get_default_font(), 16)
+
 
 #####################################################################################################################
 
@@ -38,58 +39,34 @@ def drawXY():
         if not(drawAtX < cellSize*(-1) or drawAtY < cellSize*(-1) or drawAtX > screenX or drawAtY > screenY):
             drawCell(screen,aliveRGB,drawAtX,drawAtY,(cellSize*zoom)+1)
         
-
-# def updateBoardArray(array):
-#     oldArray = [0]*arrayWidth
-#     for x in range(arrayWidth):   
-#         firstLineArray = [0]*arrayWidth
-#         for y in range(arrayHeight):
-#             if (y >= arrayWidth-1 or x >= arrayHeight-1) == False:               
-#                 firstLineArray[y] = getState(x,y)
-
-#         if x != 0:      
-#             array[x-1] = oldArray
-#         oldArray = firstLineArray
-
-#     return array
-def updateBoardArray(array):
-    newArray = []
-    for coords in array:
+def updateBoardArray(aliveSet):
+    newSet = set(())
+    for coords in aliveSet:
         # vse zive
         for dx in [-1, 0, 1]:
             for dy in [-1, 0, 1]:
                 # vsi sosedje in celica
-                coord = getState([dx + coords[0], dy + coords[1]])
-                isInside = 0
+                coord = getState((dx + coords[0], dy + coords[1]))
                 if coord != None:
-                    for i in newArray:
-                        if i == coord:
-                            isInside = 1
-                            break
-                    if isInside == 0:
-                        newArray.append(coord)
+                    newSet.add(coord)
 
-    return newArray
+    return newSet
 
 def getState(xy):
     
     counter = 0
     state = 0
-    # found = False
-    for i in xyAlive:
-        if i == xy:
-            state = 1
-            break
-
-
-    searchCoord = []
+    if xy in xyAlive:
+        state = 1
+        
+    searchCoord = set(())
 
     for dx in [-1, 0, 1]:
         for dy in [-1, 0, 1]:
             if not(dx == 0 and dy == 0):
-                searchCoord.append([dx + xy[0],dy + xy[1]])
+                searchCoord.add((dx + xy[0],dy + xy[1]))
 
-    counter = len(list(filter(lambda x: x in xyAlive , searchCoord)))
+    counter = len(xyAlive & searchCoord)
 
     newState = 0
 
@@ -104,16 +81,30 @@ def getState(xy):
         return
 
 def writeState(x,y):
-    xyAlive.append([x,y])
+    xyAlive.add((x,y))
 
 def swichCell(pos):
     x = int(((pos[0]-screenX // 2)/ zoom - playerX)/cellSize)
     y = int(((pos[1]-screenY // 2)/ zoom - playerY)/cellSize)
 
-    if [x, y] in xyAlive:
-        del xyAlive[xyAlive.index([x,y])]
+    if (x, y) in xyAlive:
+        xyAlive.remove((x,y))
     else:
-        xyAlive.append([x, y])
+        xyAlive.add((x, y))
+
+def drawPng(x,y,num):
+    
+    im = Image.open('1.jpeg') 
+    pix = im.load()
+    array = [[0]*im.size[0]]*im.size[1]
+    for i in range(im.size[0]):
+        for j in range(im.size[1]):
+            color = pix[i,j]
+            print(color[0])
+
+            array[i][j] = color[0]
+    print(array)
+
 ######################################################################################################################
 def drawShape(x,y,array):
     for i in range(len(array)):
@@ -130,7 +121,6 @@ def drawGliderGun(x,y):
 def drawGlider(x,y):
     drawShape(x,y,[[1,0,1],[0,1,1],[0,1,0]])
 
-
 def drawLightWeightSpaceship(x,y):
     drawShape(x,y,[[0,1,1,1,1,1],[1,0,0,0,0,1],[0,0,0,0,0,1],[1,0,0,0,1,0],[0,0,1,0,0,0]])
 
@@ -141,17 +131,20 @@ setupScreen(500,500)
 fps = 10
 moveSpeed = 100
 zoom = 1
-
+# drawPng(0,0,1)
 # drawBlinker(0,0)
 
-# drawGlider(10,10)
+# drawGlider(0,0)
 # drawLightWeightSpaceship(50,50)
 
 # drawRPentomino(250,250)
+drawGliderGun(0,0)
+drawGliderGun(-30,0)
+drawGliderGun(-60,0)
+drawGliderGun(-90,0)
+drawGliderGun(-120,0)
 
-#drawGliderGun(-20,-20)
-
-simulating = True
+simulating = False
 
 averageFps = clock.get_fps()
 generations = 0
